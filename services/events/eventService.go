@@ -2,7 +2,7 @@ package eventService
 
 import (
 	"encoding/json"
-	eventModel "g-oriekhov/testProject1/models"
+	eventModel "g-oriekhov/testProject1/models/events"
 	"strconv"
 
 	"net/http"
