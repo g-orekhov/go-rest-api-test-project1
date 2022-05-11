@@ -13,12 +13,12 @@ func TestSave(t *testing.T) {
 		Images:           []string{"img5", "img6"},
 		Preview:          "Don't know what is a preview",
 	}
-	_, err1 := Save(m)
+	_, err1 := Create(m)
 	if err1 == nil {
 		t.Errorf("Already exist error was expected")
 	}
 	m.Id = 3
-	_, err2 := Save(m)
+	_, err2 := Create(m)
 	if err2 != nil {
 		t.Errorf(err2.Error())
 	}
