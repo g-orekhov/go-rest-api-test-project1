@@ -54,9 +54,32 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	var data eventModel.EventModel
 	json.NewDecoder(r.Body).Decode(&data)
 	data.Id = eventModel.GetUniqueId()
-	resp, err := eventModel.Save(&data)
+	resp, err := eventModel.Create(&data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	JsonResponse(w, resp)
+}
+
+func UpdateEvent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err1 := strconv.Atoi(vars["id"])
+	if err1 != nil {
+		http.Error(w, err1.Error(), http.StatusInternalServerError)
+		return
+	}
+	// get event
+	data, err2 := eventModel.GetOne(int(id))
+	if err2 != nil {
+		http.Error(w, err2.Error(), http.StatusNotFound)
+		return
+	}
+	// update given fields
+	json.NewDecoder(r.Body).Decode(data)
+	resp, err3 := eventModel.Update(data)
+	if err3 != nil {
+		http.Error(w, err3.Error(), http.StatusNotFound)
 		return
 	}
 	JsonResponse(w, resp)

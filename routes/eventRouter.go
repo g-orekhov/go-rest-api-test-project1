@@ -11,4 +11,5 @@ func registerEventRoutes(app *app.App) {
 	eventRouter.Methods("POST").Path("/").HandlerFunc(eventService.CreateEvent)
 	eventRouter.Methods("GET").Path("/{id:[0-9]+}/").HandlerFunc(eventService.GetEvent)
 	eventRouter.Methods("DELETE").Path("/{id:[0-9]+}/").HandlerFunc(eventService.DeleteEvent)
+	eventRouter.Methods("PUT").Path("/{id:[0-9]+}/").HandlerFunc(eventService.UpdateEvent)
 }

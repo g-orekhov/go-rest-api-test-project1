@@ -20,7 +20,7 @@ type EventModel struct {
 	Preview          string   `json:"prewiew"`
 }
 
-func Save(m *EventModel) (*EventModel, error) {
+func Create(m *EventModel) (*EventModel, error) {
 	for _, v := range data {
 		if v.Id == m.Id {
 			return nil, errors.New("object with given ID is allready exist")
@@ -28,6 +28,16 @@ func Save(m *EventModel) (*EventModel, error) {
 	}
 	data = append(data, m)
 	return m, nil
+}
+
+func Update(m *EventModel) (*EventModel, error) {
+	for i, v := range data {
+		if v.Id == m.Id {
+			data[i] = m
+			return data[i], nil
+		}
+	}
+	return nil, errors.New("object with given ID is not exist")
 }
 
 func Delete(id int) (*EventModel, error) {
