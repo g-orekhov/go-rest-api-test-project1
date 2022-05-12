@@ -2,7 +2,8 @@ package eventService
 
 import (
 	"encoding/json"
-	eventModel "g-oriekhov/testProject1/models/events"
+	db "g-oriekhov/testProject1/models"
+	"log"
 	"strconv"
 
 	"net/http"
@@ -16,7 +17,7 @@ func JsonResponse(w http.ResponseWriter, data any) {
 }
 
 func GetEvents(w http.ResponseWriter, r *http.Request) {
-	data, _ := eventModel.GetAll()
+	data, _ := db.GetDB().EventGetAll()
 	JsonResponse(w, data)
 }
 
@@ -24,12 +25,14 @@ func GetEvent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	data, err := eventModel.GetOne(int(id))
+	data, err := db.GetDB().EventGetOne(int(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		log.Println(err)
+		http.Error(w, "", http.StatusNotFound)
 		return
 	}
 	JsonResponse(w, data)
@@ -39,25 +42,27 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	data, err := eventModel.Delete(id)
+	data, err := db.GetDB().EventDelete(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		log.Println(err)
+		http.Error(w, "", http.StatusNotFound)
 		return
 	}
 	JsonResponse(w, data)
 }
 
 func CreateEvent(w http.ResponseWriter, r *http.Request) {
-	var data eventModel.EventModel
-	json.NewDecoder(r.Body).Decode(&data)
-	data.Id = eventModel.GetUniqueId()
-	resp, err := eventModel.Save(&data)
+	event := new(db.Event)
+	json.NewDecoder(r.Body).Decode(event)
+	ret, err := db.GetDB().EventCreate(event)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	JsonResponse(w, resp)
+	JsonResponse(w, ret)
 }

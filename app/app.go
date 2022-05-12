@@ -1,6 +1,8 @@
 package app
 
 import (
+	db "g-oriekhov/testProject1/models"
+	"log"
 	"net/http"
 	"os"
 
@@ -10,6 +12,7 @@ import (
 type App struct {
 	http   *http.Server
 	Router *mux.Router
+	DB     *db.DB
 }
 
 func (app *App) Run() error {
@@ -25,6 +28,10 @@ func NewApp() *App {
 	app.http = &http.Server{
 		Addr:    os.Getenv("serverURL"),
 		Handler: app.Router,
+	}
+	app.DB = new(db.DB)
+	if err := app.DB.ConnectDB(); err != nil {
+		log.Fatal(err)
 	}
 	return &app
 }

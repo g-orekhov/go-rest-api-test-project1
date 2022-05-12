@@ -1,22 +1,39 @@
 package db
 
 import (
-	"context"
+	"errors"
+	"log"
 	"os"
 
-	"github.com/jackc/pgx/v4/pgxpool"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
+var errDataBase error = errors.New("data base common error")
+var errNotFound error = errors.New("records by request was not found")
+
 type DB struct {
-	Postgres *pgxpool.Pool
+	pool *gorm.DB
 }
 
+var database *DB
+
 func (db *DB) ConnectDB() error {
+	if database == nil {
+		database = db
+	}
 	//TODO: make configurations
+	dialector := postgres.Open(os.Getenv("DB_URL"))
 	var err error
-	db.Postgres, err = pgxpool.Connect(context.Background(), os.Getenv("DB_URL"))
+	//TODO: можно ли так делать? Какая часть должна быть общая, а какая одтдельная для каждого запроса?
+	db.pool, err = gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
+		log.Fatal(err)
 		return err
 	}
 	return nil
+}
+
+func GetDB() *DB {
+	return database
 }
