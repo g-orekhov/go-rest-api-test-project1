@@ -26,33 +26,24 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-/*
-Geo coords record in DB - POINT(LONG, LAT)
-Methods:
-String() string - retuns point string to store in format "SRID=4326;POINT(LONG, LAT)"
-Scan(any) error - scans values from DB respons
-Value() string -  returns point to store in DB
-*/
+// Custom data type for a geopoint in the Postgres (with hardcoded SRID=4326)
 type Coords struct {
 	Long float64 `json:"long"`
 	Lat  float64 `json:"lat"`
 }
 
-func (c Coords) String() string {
-	return fmt.Sprintf("SRID=4326;POINT(%f %f)", c.Long, c.Lat)
-}
-
 func (c *Coords) Scan(src any) error {
-	// В БД формат point(Lon,Lat)::geometry
-	// по умолчанию БД возврашает точку в формате - EWKB или что-то вроде (гугл не помогает)
-	// Структура кторую удалось распарсить:
-	// первый байт - порядок байт Big/Little-endian (у нас он 1 - little-endian)
-	// 4 байта - тип обьекта (но у нас почему то 3 байта тип, а последний байт Х/З что)
-	// 4 байта - SRID
-	// 8 + 8 байт - значения точки
-	// Значения читаю как UINT и затем конвертирую в FLOAT64. ParseFloat выдаёт бред какой-то
-
-	//Интерфейс src - string, но нужно поискать более правильный способ работы с байтами
+	/*
+		В БД формат point(Lon,Lat)::geometry
+		по умолчанию БД возврашает точку в формате - EWKB или что-то вроде (гугл не помогает)
+		Структура кторую удалось распарсить:
+		первый байт - порядок байт Big/Little-endian (у нас он 1 - little-endian)
+		4 байта - тип обьекта (но у нас почему то 3 байта тип, а последний байт Х/З что)
+		4 байта - SRID
+		8 + 8 байт - значения точки
+		Значения читаю как UINT и затем конвертирую в FLOAT64. ParseFloat выдаёт бред какой-то
+	*/
+	// TODO: Интерфейс src - string, но нужно поискать более правильный способ работы с байтами
 	str := src.(string)
 	if len(str) != 50 {
 		//TODO: может ли точка иметь другой размер, что в src - если в бд null? Узнать - обработать.
@@ -75,19 +66,15 @@ func (c *Coords) Scan(src any) error {
 }
 
 func (c Coords) Value() (driver.Value, error) {
-	return c.String(), nil
+	/*
+		Returns point string to store geopoint in the Postgres
+		"SRID=4326;POINT(LONG, LAT)"
+	*/
+	return fmt.Sprintf("SRID=4326;POINT(%f %f)", c.Long, c.Lat), nil
 }
 
-// У массива по умолчанию вид [1,2] а в PostgreSQL надо {1,2}
-// Загуглил решение с кучей гемороя в запросах
-// не нашел решения и решил что лучше реализовать интерфейсы Scaner/Valuer
-// скажите мне если есть более простое решение
+// Custom data type for a "strings array" field in the Postgres
 type Images []string
-
-func (im Images) String() string {
-	ret := strings.Join(im, ",")
-	return "{" + ret + "}"
-}
 
 func (im *Images) Scan(src any) error {
 	str := src.(string)
@@ -101,7 +88,9 @@ func (im *Images) Scan(src any) error {
 }
 
 func (im Images) Value() (driver.Value, error) {
-	return im.String(), nil
+	// Returns string in the format: "{str1, str2, ...}"
+	ret := strings.Join(im, ",")
+	return "{" + ret + "}", nil
 }
 
 type Event struct {
